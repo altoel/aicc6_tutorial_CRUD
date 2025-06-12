@@ -10,4 +10,12 @@ export class Board {
 
   @Column()
   postContent: string;
+
+  toJSON() {
+    return {
+      id: this.id,
+      postTitle: this.postTitle,
+      postContent: this.postContent,
+    };
+  }
 }
