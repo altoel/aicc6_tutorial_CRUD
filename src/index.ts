@@ -1,6 +1,6 @@
 import { AppDataSource } from "./data-source";
 import { Board } from "./entity/Board";
-const readline = require("readline");
+import * as fs from "fs/promises";
 
 const createPost = async (postTitle: string, postContent: string) => {
   const board = new Board();
@@ -19,6 +19,7 @@ const readPost = async () => {
   try {
     const allPosts = await boardRepository.find();
     console.log(`Loaded posts: ${allPosts.length}`);
+    console.log(allPosts);
   } catch (error) {
     console.log(`failed to read posts - ${error}`);
   }
@@ -47,9 +48,7 @@ const updatePost = async (
   }
 };
 
-const deletePost = async (
-  postId: number
-) => {
+const deletePost = async (postId: number) => {
   const boardRepository = AppDataSource.getRepository(Board);
   try {
     const postToDelete = await boardRepository.findOneBy({
@@ -65,51 +64,62 @@ const deletePost = async (
     console.log(`failed to delete a post ID:${postId} - ${error}`);
   }
 };
+
+const exportToJsonFile = async () => {
+  const boardRepository = AppDataSource.getRepository(Board);
+  try {
+    const allPosts = await boardRepository.find();
+    // const jsonData = allPosts.map((post) => post.toJSON());
+    // const jsonString = JSON.stringify(jsonData, null, 2);
+    // await fs.writeFile("board_export.json", jsonString, "utf-8");
+    await fs.writeFile(
+      "board_export.json",
+      JSON.stringify(allPosts, null, 2),
+      "utf-8"
+    );
+    console.log("Exported posts to board_export.json");
+  } catch (error) {
+    console.log(`failed to export DB - ${error}`);
+  }
+};
+
+const dropTable = async () => {
+  const boardRepository = AppDataSource.getRepository(Board);
+  try {
+    await boardRepository.clear();
+    console.log("Dropped all posts");
+  } catch (error) {
+    console.log(`failed to drop posts - ${error}`);
+  }
+};
+
 // ---------------------------------------------------
 
 AppDataSource.initialize()
   .then(async () => {
-    // const rl = readline.createInterface({
-    //   input: process.stdin,
-    //   output: process.stdout,
-    // });
-    // const askQuestion = (query: string): Promise<string> => {
-    //   return new Promise((resolve) => rl.question(query, resolve));
-    // };
+    // 테스트용
+    // 테이블 초기화 + id값 1로 초기화
+    await AppDataSource.query("DELETE FROM board");
+    await AppDataSource.query(
+      "DELETE FROM sqlite_sequence WHERE name = 'board'"
+    );
 
-    // while (true) {
-    //   console.log('1. create\n2. read\n3. update\n4. delete\n5. exit');
-    //   const answer = await askQuestion('Choose an option: ');
-    //   switch (answer) {
-    //     case '1':
-    //       const title = await askQuestion('Enter post title: ');
-    //       const content = await askQuestion('Enter post content: ');
-    //       await createPost(title, content);
-    //       break;
-    //     case '2':
-    //       await readPost();
-    //       break;
-    //     case '3':
-    //       await updatePost();
-    //       break;
-    //     case '4':
-    //       const id = await askQuestion('Enter post ID to delete: ');
-    //       await deletePost(id);
-    //       break;
-    //     case '5':
-    //       console.log('Exiting...');
-    //       rl.close();
-    //       process.exit(0);
-    //     default:
-    //       console.log('Invalid option, please try again.');
-    //   }
-    // }
-    // createPost("Cat", "Meow meow meow")
-    // createPost("Dog", "Bark bark bark")
-    await createPost("Duck", "Quaek Quak Quaok");
+    // Create
+    await createPost("Cat", "Meow Meow");
+    await createPost("Dog", "Woof Woof");
+    await createPost("Cow", "Moo Moo Moo");
+
     await readPost();
-    await updatePost(1, "Updated Duck", "Updated Quaek Quak Quaok");
-    await deletePost(2);
+
+    // Update
+    await updatePost(1, "Duck", "Quaek Quak Quaok");
+
+    // Delete
+    await deletePost(2); //dog 삭제
+
     await readPost();
+
+    // db를 json 파일로 저장
+    await exportToJsonFile();
   })
   .catch((error) => console.log(error));

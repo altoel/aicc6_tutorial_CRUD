@@ -18,4 +18,8 @@ export class Board {
       postContent: this.postContent,
     };
   }
+
+  toString() {
+    return `Title: ${this.postTitle}, Content: ${this.postContent}`;
+  }
 }

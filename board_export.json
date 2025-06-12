@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "postTitle": "Duck",
+    "postContent": "Quaek Quak Quaok"
+  },
+  {
+    "id": 3,
+    "postTitle": "Cow",
+    "postContent": "Moo Moo Moo"
+  }
+]
